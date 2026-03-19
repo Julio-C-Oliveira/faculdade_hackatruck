@@ -1,0 +1,12 @@
+# Arquivos da API:
+api.txt
+node-red.png
+
+# Imagens com copyright:
+*.jpg
+*.jpeg
+*.svg
+*.png
+
+# Músicas com copyright:
+*.mp3
