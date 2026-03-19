@@ -23,7 +23,6 @@ struct CharacterView: View {
                 }
                 .frame(width: 200, height: 200)
                 .clipShape(Circle())
-                // Use the first color from the API for the border, default to Red
                 .overlay(Circle().stroke(Color(hex: umaMusume.umaColors?.first ?? "#FF0000"), lineWidth: 4))
                 .shadow(radius: 10)
                 .padding(.top, 30)
@@ -104,9 +103,11 @@ extension Color {
 
 struct ListView: View {
     @ObservedObject var viewModel: ViewModel
+    @State private var whoUma: UmaMusume? 
+    @State private var showingEditSheet = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 15) {
+        List {
             ForEach(viewModel.umaMusume) { umaMusume in
                 NavigationLink(destination: CharacterView(umaMusume: umaMusume)) {
                     HStack(spacing: 15) {
@@ -118,19 +119,37 @@ struct ListView: View {
                         }
                         .frame(width: 60, height: 60)
                         .clipShape(Circle())
-                        .shadow(radius: 3)
                         
                         Text(umaMusume.umaName ?? "Desconhecido")
                             .font(.headline)
                         
                         Spacer()
                     }
-                    .padding()
-                    .background(Color(.systemBackground))
-                    .cornerRadius(12)
-                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
-                    .padding(.horizontal)
                 }
+                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                    Button {
+                        whoUma = umaMusume
+                        showingEditSheet = true
+                    } label: {
+                        Label("Editar", systemImage: "pencil")
+                    }
+                    .tint(.orange)
+                }
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        if let rev = umaMusume.rev {
+                            viewModel.delete(id: umaMusume.id, rev: rev)
+                        }
+                    } label: {
+                        Label("Deletar", systemImage: "trash")
+                    }
+                }
+            }
+        }
+        .listStyle(.plain)
+        .sheet(isPresented: $showingEditSheet) {
+            if let uma = whoUma {
+                EditUmaView(viewModel: viewModel, originalUma: uma)
             }
         }
     }

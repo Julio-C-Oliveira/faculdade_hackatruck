@@ -54,6 +54,7 @@ struct Service {
 
 struct UmaMusume: Codable, Identifiable {
     let id: String
+    let rev: String?
     let umaName: String?
     let umaIcon: String?
     let umaSong: String?
@@ -63,6 +64,7 @@ struct UmaMusume: Codable, Identifiable {
 
     enum CodingKeys: String, CodingKey {
         case id = "_id"
+        case rev = "_rev"
         case umaName, umaIcon, umaSong, umaPhrase, umaDescription, umaColors
     }
 }

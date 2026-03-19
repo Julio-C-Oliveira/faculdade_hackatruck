@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct AddEditView: View {
+struct AddVUmaView: View {
     @ObservedObject var viewModel: ViewModel
     @Environment(\.dismiss) var dismiss
     
@@ -18,67 +18,108 @@ struct AddEditView: View {
     @State private var description: String = ""
     @State private var color1: String = "#FFFFFF"
     @State private var color2: String = "#000000"
-    
-    var umaParaEditar: UmaMusume?
 
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Informações Básicas")) {
-                    TextField("Nome da UmaMusume", text: $name)
+                Section("Nova Personagem") {
+                    TextField("Nome", text: $name)
                     TextField("URL do Ícone", text: $icon)
-                    TextField("URL da Música (YouTube)", text: $song)
+                    TextField("URL da Música", text: $song)
                 }
                 
-                Section(header: Text("Personalidade")) {
-                    TextField("Frase de Efeito", text: $phrase)
-                    TextEditor(text: $description)
-                        .frame(height: 100)
+                Section("Detalhes") {
+                    TextField("Frase", text: $phrase)
+                    TextEditor(text: $description).frame(height: 80)
                 }
                 
-                Section(header: Text("Cores de Destaque (Hex)")) {
-                    TextField("Cor Primária (ex: #CA46B0)", text: $color1)
-                    TextField("Cor Secundária (ex: #B52542)", text: $color2)
+                Section("Cores") {
+                    TextField("Cor 1", text: $color1)
+                    TextField("Cor 2", text: $color2)
                 }
                 
-                Button(action: salvar) {
-                    HCenter {
-                        Text(umaParaEditar == nil ? "Adicionar" : "Salvar Alterações")
-                            .bold()
-                    }
+                Button("Cadastrar UmaMusume") {
+                    let new = UmaMusume(
+                        id: UUID().uuidString,
+                        rev: nil,
+                        umaName: name,
+                        umaIcon: icon,
+                        umaSong: song,
+                        umaPhrase: phrase,
+                        umaDescription: description,
+                        umaColors: [color1, color2]
+                    )
+                    viewModel.post(newUma: new)
+                    dismiss()
                 }
                 .disabled(name.isEmpty)
             }
-            .navigationTitle(umaParaEditar == nil ? "Nova Uma" : "Editar Uma")
-            .onAppear {
-                if let uma = umaParaEditar {
-                    name = uma.umaName ?? ""
-                    icon = uma.umaIcon ?? ""
-                    song = uma.umaSong ?? ""
-                    phrase = uma.umaPhrase ?? ""
-                    description = uma.umaDescription ?? ""
-                }
-            }
+            .navigationTitle("Adicionar")
         }
     }
+}
 
-    func salvar() {
-        let newUma = UmaMusume(
-            id: umaParaEditar?.id ?? UUID().uuidString,
-            umaName: name,
-            umaIcon: icon,
-            umaSong: song,
-            umaPhrase: phrase,
-            umaDescription: description,
-            umaColors: ["#000000"]
-        )
+struct EditUmaView: View {
+    @ObservedObject var viewModel: ViewModel
+    @Environment(\.dismiss) var dismiss
+    
+    let originalUma: UmaMusume
+    
+    @State private var name: String = ""
+    @State private var icon: String = ""
+    @State private var song: String = ""
+    @State private var phrase: String = ""
+    @State private var description: String = ""
+    @State private var color1: String = ""
+    @State private var color2: String = ""
 
-        if umaParaEditar == nil {
-            viewModel.post(newUma: newUma)
-        } else {
-            viewModel.put(editedUma: newUma)
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Alterar Informações de \(originalUma.umaName ?? "")") {
+                    TextField("Nome", text: $name)
+                    TextField("URL do Ícone", text: $icon)
+                    TextField("URL da Música", text: $song)
+                }
+                
+                Section("Personalidade e Biografia") {
+                    TextField("Frase de Efeito", text: $phrase)
+                    TextEditor(text: $description) 
+                        .frame(height: 100)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.2)))
+                }
+                
+                Section("Cores Atuais") {
+                    TextField("Cor 1", text: $color1)
+                    TextField("Cor 2", text: $color2)
+                }
+
+                Button("Salvar Alterações") {
+                    let edited = UmaMusume(
+                        id: originalUma.id,
+                        rev: originalUma.rev,
+                        umaName: name,
+                        umaIcon: icon,
+                        umaSong: song,
+                        umaPhrase: phrase,
+                        umaDescription: description,
+                        umaColors: [color1, color2]
+                    )
+                    viewModel.put(editedUma: edited)
+                    dismiss()
+                }
+                .disabled(name.isEmpty)
+            }
+            .navigationTitle("Editar")
+            .onAppear {
+                name = originalUma.umaName ?? ""
+                icon = originalUma.umaIcon ?? ""
+                song = originalUma.umaSong ?? ""
+                phrase = originalUma.umaPhrase ?? ""
+                description = originalUma.umaDescription ?? ""
+                color1 = originalUma.umaColors?.first ?? "#FFFFFF"
+                color2 = originalUma.umaColors?.last ?? "#000000"
+            }
         }
-        
-        dismiss()
     }
 }
